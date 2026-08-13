@@ -1,0 +1,9 @@
+{
+  "name": "life-upgrade-project-50-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^10.0.9"
+  }
+}
