@@ -18,14 +18,78 @@ function validSyncId(value) {
   return typeof value === "string" && idPattern.test(value);
 }
 
+function normalizeList(value, limit) {
+  return Array.isArray(value)
+    ? value.filter((item) => item && typeof item === "object").slice(0, limit)
+    : [];
+}
+
+function localDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseLocalDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(dateString, days) {
+  const date = parseLocalDate(dateString) || parseLocalDate(localDateString());
+  date.setDate(date.getDate() + days);
+  return formatLocalDate(date);
+}
+
+function clampDay(value) {
+  return Math.min(50, Math.max(1, Number(value || 1)));
+}
+
+function extractDate(input) {
+  if (parseLocalDate(input.date)) return input.date;
+  if (input.daily && parseLocalDate(input.daily.date)) return input.daily.date;
+  return null;
+}
+
+function dateFromHistory(history, day) {
+  if (!Array.isArray(history)) return null;
+  const anchor = history.find((entry) => parseLocalDate(entry?.date) && Number.isFinite(Number(entry?.day)));
+  if (!anchor) return null;
+  return addDays(anchor.date, clampDay(day) - clampDay(anchor.day));
+}
+
+function inferSeasonStartDate(day, date) {
+  return addDays(parseLocalDate(date) ? date : localDateString(), 1 - clampDay(day));
+}
+
 function normalizeState(input = {}) {
+  const day = clampDay(input.day);
+  const history = normalizeList(input.history, 50);
+  const currentDate = extractDate(input) || dateFromHistory(history, day) || localDateString();
+  const seasonStartDate = parseLocalDate(input.seasonStartDate)
+    ? input.seasonStartDate
+    : inferSeasonStartDate(day, currentDate);
+
   return {
     xp: Math.max(0, Number(input.xp || 0)),
     coins: Math.max(0, Number(input.coins || 0)),
     season: String(input.season || "01").slice(0, 12),
-    day: Math.min(50, Math.max(1, Number(input.day || 1))),
-    history: Array.isArray(input.history) ? input.history.slice(0, 50) : [],
-    wishes: Array.isArray(input.wishes) ? input.wishes.slice(0, 50) : [],
+    seasonStartDate,
+    day,
+    history,
+    wishes: normalizeList(input.wishes, 50),
   };
 }
 

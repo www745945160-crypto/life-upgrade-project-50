@@ -51,6 +51,65 @@
       padding: 24px 0 36px;
     }
 
+    .app-nav {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 8px;
+      border: 1px solid rgba(215, 222, 216, .95);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .9);
+      box-shadow: 0 10px 28px rgba(31, 54, 42, .08);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav-btn {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .nav-btn.active {
+      color: #fff;
+      background: var(--leaf);
+      border-color: var(--leaf);
+    }
+
+    .view {
+      display: grid;
+      gap: 16px;
+    }
+
+    .view[hidden] {
+      display: none;
+    }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 14px;
+      border-radius: 8px;
+      padding: 16px;
+      background: rgba(255, 255, 255, .84);
+      border: 1px solid rgba(215, 222, 216, .95);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .page-head h2 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
     .topbar {
       display: grid;
       grid-template-columns: 1.25fr .75fr;
@@ -202,6 +261,22 @@
     .today-total strong {
       font-size: 36px;
       line-height: 1;
+    }
+
+    .edit-banner {
+      display: none;
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: #6d3b05;
+      background: #fff3db;
+      border: 1px solid #f3d49e;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .edit-banner.active {
+      display: block;
     }
 
     .actions {
@@ -444,10 +519,110 @@
       gap: 10px;
       color: var(--muted);
       font-size: 13px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .history-item.selected {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 3px rgba(115, 201, 154, .18);
     }
 
     .history-item strong {
       color: var(--ink);
+    }
+
+    .trend-card,
+    .review-detail {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .trend-top,
+    .detail-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .trend-top strong,
+    .detail-top strong {
+      font-size: 18px;
+    }
+
+    .trend-chart {
+      width: 100%;
+      height: 150px;
+      display: block;
+      overflow: visible;
+    }
+
+    .trend-empty {
+      min-height: 118px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 7px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid #eef3ef;
+      padding-top: 7px;
+    }
+
+    .detail-row strong {
+      color: var(--ink);
+    }
+
+    .detail-row.done strong {
+      color: var(--leaf);
+    }
+
+    .input-snapshot {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .input-chip {
+      border: 1px solid #eef3ef;
+      border-radius: 8px;
+      padding: 7px 8px;
+      min-width: 0;
+      background: #fbfdfb;
+    }
+
+    .input-chip span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .input-chip strong {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      margin-top: 2px;
     }
 
     .note {
@@ -489,15 +664,28 @@
       }
 
       .actions,
-      .wish-form {
+      .wish-form,
+      .input-snapshot {
         grid-template-columns: 1fr;
+      }
+
+      .page-head {
+        display: grid;
       }
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <section class="topbar">
+    <nav class="app-nav" aria-label="页面导航">
+      <button class="nav-btn active" type="button" data-nav="today">今日</button>
+      <button class="nav-btn" type="button" data-nav="review">回顾</button>
+      <button class="nav-btn" type="button" data-nav="wishlist">Wishlist</button>
+      <button class="nav-btn" type="button" data-nav="sync">同步</button>
+    </nav>
+
+    <section class="view" id="viewToday" data-view="today">
+      <section class="topbar">
       <div class="hero">
         <div class="kicker">LIFE UPGRADE</div>
         <h1>PROJECT 50</h1>
@@ -546,10 +734,12 @@
           <button class="btn primary" id="settleBtn">结算入账</button>
           <button class="btn" id="clearBtn">清空今日输入</button>
         </div>
+        <div class="edit-banner" id="editBanner"></div>
+        <button class="btn warn" id="cancelEditBtn" type="button" hidden>取消编辑</button>
       </aside>
-    </section>
+      </section>
 
-    <section class="layout">
+      <section class="layout">
       <div class="quests">
         <article class="quest" data-quest="early">
           <div class="quest-head">
@@ -769,20 +959,6 @@
 
       <aside class="side">
         <section class="summary">
-          <h2>SYNC</h2>
-          <div class="note" id="syncStatus">本机模式</div>
-          <div class="wish-form">
-            <input id="syncCode" type="password" placeholder="设置或输入同步码">
-            <button class="btn primary" id="connectSyncBtn">连接同步</button>
-          </div>
-          <div class="actions">
-            <button class="btn" id="loadCloudBtn">读取云端</button>
-            <button class="btn" id="saveCloudBtn">保存云端</button>
-          </div>
-          <div class="note">手机和电脑输入同一个同步码，就会接上同一份 XP、Coins、记录和 Wishlist。</div>
-        </section>
-
-        <section class="summary">
           <h2>COMBO</h2>
           <div class="score-grid">
             <div class="score">
@@ -798,25 +974,88 @@
           </div>
           <div class="note" id="comboText">Combo Bonus：+0</div>
         </section>
+      </aside>
+      </section>
+    </section>
 
-        <section class="wishlist">
-          <h2>WISHLIST</h2>
-          <div class="note">Available Coins：<strong id="availableCoins">0</strong></div>
-          <div class="wish-form">
-            <input id="wishName" type="text" placeholder="升级物品">
-            <input id="wishPrice" type="number" min="1" placeholder="价格">
-            <button class="btn" id="addWishBtn">加入 Wishlist</button>
+    <section class="view" id="viewReview" data-view="review" hidden>
+      <div class="page-head">
+        <div>
+          <div class="kicker">REVIEW</div>
+          <h2>回顾趋势</h2>
+        </div>
+        <div class="note">只看你完成了什么，以及每天拿到多少积分。</div>
+      </div>
+
+      <section class="history">
+        <div class="trend-card">
+          <div class="trend-top">
+            <span class="label">Daily Points Trend</span>
+            <strong id="trendLatest">--</strong>
           </div>
-          <div class="wish-list" id="wishList"></div>
-        </section>
-
-        <section class="history">
-          <h2>RECENT LOG</h2>
-          <div class="history-list" id="historyList"></div>
+          <div id="trendChart" class="trend-empty">还没有趋势数据</div>
+        </div>
+        <div class="history-list" id="historyList"></div>
+        <div class="review-detail" id="historyDetail">
+          <div class="note">选择某一天查看完整回顾。</div>
+        </div>
+        <div class="actions">
           <button class="btn" id="undoBtn">撤销最近入账</button>
           <button class="btn warn" id="resetAllBtn">重置全部数据</button>
-        </section>
-      </aside>
+        </div>
+      </section>
+    </section>
+
+    <section class="view" id="viewWishlist" data-view="wishlist" hidden>
+      <div class="page-head">
+        <div>
+          <div class="kicker">WISHLIST</div>
+          <h2>升级清单</h2>
+        </div>
+        <div class="note">Available Coins：<strong id="availableCoins">0</strong></div>
+      </div>
+
+      <section class="wishlist">
+        <div class="wish-form">
+          <input id="wishName" type="text" placeholder="升级物品">
+          <input id="wishPrice" type="number" min="1" placeholder="价格">
+          <button class="btn" id="addWishBtn">加入 Wishlist</button>
+        </div>
+        <div class="wish-list" id="wishList"></div>
+      </section>
+    </section>
+
+    <section class="view" id="viewSync" data-view="sync" hidden>
+      <div class="page-head">
+        <div>
+          <div class="kicker">SYNC</div>
+          <h2>同步</h2>
+        </div>
+        <div class="note" id="syncStatus">本机模式</div>
+      </div>
+
+      <section class="summary">
+        <div class="score-grid">
+          <div class="score">
+            <span class="label">Season Day 1</span>
+            <strong id="seasonStartText">--</strong>
+          </div>
+          <div class="score">
+            <span class="label">Current Day</span>
+            <strong id="syncDayText">01</strong>
+          </div>
+        </div>
+        <button class="btn" id="resetSeasonStartBtn" type="button">设今天为 Day 1</button>
+        <div class="wish-form">
+          <input id="syncCode" type="password" placeholder="设置或输入同步码">
+          <button class="btn primary" id="connectSyncBtn">连接同步</button>
+        </div>
+        <div class="actions">
+          <button class="btn" id="loadCloudBtn">读取云端</button>
+          <button class="btn" id="saveCloudBtn">保存云端</button>
+        </div>
+        <div class="note">手机和电脑输入同一个同步码，就会接上同一份 XP、Coins、记录和 Wishlist。</div>
+      </section>
     </section>
   </main>
 
@@ -828,6 +1067,7 @@
       xp: 0,
       coins: 0,
       season: "01",
+      seasonStartDate: "",
       day: 1,
       history: [],
       wishes: []
@@ -842,14 +1082,68 @@
       "bookFinish", "dietControlled", "dietCalories", "trackOk", "dailyNote"
     ];
 
+    const inputLabels = {
+      season: "Season",
+      day: "Day",
+      date: "日期",
+      wakeTime: "起床时间",
+      earlyManual: "早起手动点亮",
+      morningOk: "晨间合格",
+      exerciseMin: "运动分钟",
+      steps: "步数",
+      aiRaw: "AI 总时长",
+      aiFactor: "AI 有效系数",
+      cookingMin: "做饭学习分钟",
+      otherSkillMin: "Other Skill 分钟",
+      aiResult: "AI 成果",
+      cookingResult: "做饭成果",
+      rednoteResult: "小红书",
+      otherSkillResult: "Other Skill 成果",
+      readMin: "阅读分钟",
+      bookCapture: "读书随手记",
+      bookLongNote: "长篇笔记",
+      bookFinish: "看完一本书",
+      dietControlled: "Controlled Eating",
+      dietCalories: "≤1400 kcal",
+      trackOk: "今天有记录",
+      dailyNote: "今日备注"
+    };
+
+    const optionLabels = {
+      aiFactor: {
+        "1": "×1.0 自己深度学习",
+        "0.7": "×0.7 AI辅助但自己主导",
+        "0.3": "×0.3 大量生成/等待",
+        "0": "×0 AI基本代做"
+      },
+      aiResult: { "0": "无", "10": "小成果 +10", "30": "中成果 +30", "50": "大成果 +50" },
+      cookingResult: { "0": "无", "10": "做一道菜 +10", "50": "学会好吃的菜 +50" },
+      rednoteResult: { "0": "无", "10": "随手记 +10", "30": "简单知识型 +30", "50": "复杂知识型 +50" }
+    };
+
+    const reviewInputIdsByGoal = {
+      early: ["wakeTime", "earlyManual"],
+      morning: ["morningOk"],
+      body: ["exerciseMin", "steps"],
+      skill: ["aiRaw", "aiFactor", "cookingMin", "otherSkillMin", "aiResult", "cookingResult", "rednoteResult", "otherSkillResult"],
+      book: ["readMin", "bookCapture", "bookLongNote", "bookFinish"],
+      diet: ["dietControlled", "dietCalories"],
+      track: ["trackOk", "dailyNote"]
+    };
+
     let state = load();
     let syncId = localStorage.getItem(syncStorageKey) || "";
+    let selectedHistoryId = null;
+    let activeView = "today";
+    let editingEntryId = null;
+    let draftBeforeEdit = null;
+    let syncingCalendar = false;
 
     function load() {
       try {
-        return { ...defaultState, ...JSON.parse(localStorage.getItem(storageKey) || "{}") };
+        return normalizeState(JSON.parse(localStorage.getItem(storageKey) || "{}"));
       } catch {
-        return { ...defaultState };
+        return normalizeState(defaultState);
       }
     }
 
@@ -861,6 +1155,18 @@
       $("syncStatus").textContent = message;
     }
 
+    function setActiveView(view) {
+      activeView = view;
+      document.querySelectorAll("[data-view]").forEach((section) => {
+        section.hidden = section.dataset.view !== view;
+      });
+      document.querySelectorAll("[data-nav]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.nav === view);
+      });
+      if (view === "review") renderHistory();
+      if (view === "wishlist") renderWishes();
+    }
+
     async function hashSyncCode(code) {
       const data = new TextEncoder().encode(`life-upgrade:${code.trim()}`);
       const digest = await crypto.subtle.digest("SHA-256", data);
@@ -870,14 +1176,7 @@
     }
 
     function cloudPayload() {
-      return {
-        xp: Math.max(0, Number(state.xp || 0)),
-        coins: Math.max(0, Number(state.coins || 0)),
-        season: String(state.season || "01"),
-        day: Math.min(50, Math.max(1, Number(state.day || 1))),
-        history: Array.isArray(state.history) ? state.history.slice(0, 50) : [],
-        wishes: Array.isArray(state.wishes) ? state.wishes.slice(0, 50) : []
-      };
+      return normalizeState({ ...state, date: $("date").value || localDateString() });
     }
 
     async function saveCloud() {
@@ -915,9 +1214,11 @@
           setSyncStatus("云端还没有记录");
           return null;
         }
-        state = { ...defaultState, ...data.state };
+        state = normalizeState(data.state, $("date").value || localDateString());
         $("season").value = state.season || "01";
         $("day").value = state.day || 1;
+        $("date").value = dateFromDay(state.day);
+        selectedHistoryId = null;
         save();
         render();
         setSyncStatus("已读取云端");
@@ -950,6 +1251,240 @@
 
     function checked(id) {
       return $(id).checked;
+    }
+
+    function newId() {
+      return crypto.randomUUID
+        ? crypto.randomUUID()
+        : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function captureInputs() {
+      return ids.reduce((memo, id) => {
+        const el = $(id);
+        if (!el) return memo;
+        memo[id] = el.type === "checkbox" ? el.checked : el.value;
+        return memo;
+      }, {});
+    }
+
+    function applyInputs(inputs = {}) {
+      ids.forEach((id) => {
+        const el = $(id);
+        if (!el || !(id in inputs)) return;
+        if (el.type === "checkbox") el.checked = Boolean(inputs[id]);
+        else el.value = inputs[id];
+      });
+    }
+
+    function emptyInputs(day) {
+      return {
+        season: state.season || "01",
+        day,
+        date: dateFromDay(day),
+        wakeTime: "",
+        earlyManual: false,
+        morningOk: false,
+        exerciseMin: "0",
+        steps: "0",
+        aiRaw: "0",
+        aiFactor: "1",
+        cookingMin: "0",
+        otherSkillMin: "0",
+        aiResult: "0",
+        cookingResult: "0",
+        rednoteResult: "0",
+        otherSkillResult: false,
+        readMin: "0",
+        bookCapture: false,
+        bookLongNote: false,
+        bookFinish: false,
+        dietControlled: false,
+        dietCalories: false,
+        trackOk: false,
+        dailyNote: ""
+      };
+    }
+
+    function emptyBreakdown() {
+      return {
+        early: { label: "EARLY｜早起", done: false, points: 0 },
+        morning: { label: "MORNING｜晨间状态", done: false, points: 0 },
+        body: { label: "BODY｜运动", done: false, points: 0, detail: "运动 0 min，步数 0" },
+        skill: { label: "SKILL｜学习技能", done: false, points: 0, detail: "有效技能时间 0 min，AI有效 0 min" },
+        book: { label: "BOOK｜读书", done: false, points: 0, detail: "阅读 0 min，成果 +0" },
+        diet: { label: "DIET｜饮食", done: false, points: 0 },
+        track: { label: "TRACK｜留下记录", done: false, points: 0 }
+      };
+    }
+
+    function buildEntry(calc, overrides = {}) {
+      return {
+        id: overrides.id || newId(),
+        version: 2,
+        type: overrides.type || "settled",
+        date: overrides.date ?? ($("date").value || localDateString()),
+        season: overrides.season ?? state.season,
+        day: overrides.day ?? state.day,
+        total: calc.total,
+        lights: calc.lights,
+        note: overrides.note ?? $("dailyNote").value.trim(),
+        inputs: overrides.inputs || captureInputs(),
+        breakdown: calc.breakdown,
+        combo: calc.comboDetail
+      };
+    }
+
+    function buildMissedEntry(day) {
+      return {
+        id: newId(),
+        version: 2,
+        type: "missed",
+        date: dateFromDay(day),
+        season: state.season || "01",
+        day,
+        total: 0,
+        lights: 0,
+        note: "未记录",
+        inputs: emptyInputs(day),
+        breakdown: emptyBreakdown(),
+        combo: { perfect: false, full: false, points: 0, base: 0 }
+      };
+    }
+
+    function latestRecordedDay() {
+      return state.history.reduce((max, entry) => {
+        const day = Number(entry.day || 0);
+        return Number.isFinite(day) ? Math.max(max, day) : max;
+      }, 0);
+    }
+
+    function missingEntriesBefore(day) {
+      const latest = latestRecordedDay();
+      if (day <= latest + 1) return [];
+      const entries = [];
+      for (let missingDay = latest + 1; missingDay < day; missingDay += 1) {
+        entries.push(buildMissedEntry(missingDay));
+      }
+      return entries;
+    }
+
+    function selectedHistoryIndex() {
+      return state.history.findIndex((entry, index) => historyId(entry, index) === selectedHistoryId);
+    }
+
+    function clampDay(value) {
+      return Math.min(50, Math.max(1, Math.round(Number(value || 1))));
+    }
+
+    function parseLocalDate(value) {
+      if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+      const [year, month, day] = value.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+      return date;
+    }
+
+    function formatLocalDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function addDays(dateString, days) {
+      const date = parseLocalDate(dateString) || parseLocalDate(localDateString());
+      date.setDate(date.getDate() + days);
+      return formatLocalDate(date);
+    }
+
+    function dayDiff(startDate, endDate) {
+      const start = parseLocalDate(startDate);
+      const end = parseLocalDate(endDate);
+      if (!start || !end) return 0;
+      return Math.round((end - start) / 86400000);
+    }
+
+    function seasonStartDate() {
+      state.seasonStartDate = state.seasonStartDate || localDateString();
+      return state.seasonStartDate;
+    }
+
+    function validDate(value, fallback = localDateString()) {
+      return parseLocalDate(value) ? value : fallback;
+    }
+
+    function inferSeasonStartDate(day, date) {
+      return addDays(validDate(date), 1 - clampDay(day));
+    }
+
+    function dateFromHistory(history, day) {
+      if (!Array.isArray(history)) return null;
+      const anchor = history.find((entry) => parseLocalDate(entry?.date) && Number.isFinite(Number(entry?.day)));
+      if (!anchor) return null;
+      return addDays(anchor.date, clampDay(day) - clampDay(anchor.day));
+    }
+
+    function dateFromPayload(payload) {
+      if (!payload || typeof payload !== "object") return null;
+      if (parseLocalDate(payload.date)) return payload.date;
+      if (payload.daily && parseLocalDate(payload.daily.date)) return payload.daily.date;
+      return null;
+    }
+
+    function normalizeHistory(value) {
+      return Array.isArray(value)
+        ? value.filter((entry) => entry && typeof entry === "object").slice(0, 50)
+        : [];
+    }
+
+    function normalizeWishes(value) {
+      return Array.isArray(value)
+        ? value.filter((wish) => wish && typeof wish === "object").slice(0, 50)
+        : [];
+    }
+
+    function normalizeState(input = {}, fallbackDate = localDateString()) {
+      const payload = input && typeof input === "object" ? input : {};
+      const day = clampDay(payload.day);
+      const history = normalizeHistory(payload.history);
+      const currentDate = dateFromPayload(payload) || dateFromHistory(history, day) || validDate(fallbackDate);
+      const seasonStart = parseLocalDate(payload.seasonStartDate)
+        ? payload.seasonStartDate
+        : inferSeasonStartDate(day, currentDate);
+
+      return {
+        xp: Math.max(0, Number(payload.xp || 0)),
+        coins: Math.max(0, Number(payload.coins || 0)),
+        season: String(payload.season || "01").slice(0, 12),
+        seasonStartDate: seasonStart,
+        day,
+        history,
+        wishes: normalizeWishes(payload.wishes)
+      };
+    }
+
+    function dateFromDay(day) {
+      return addDays(seasonStartDate(), clampDay(day) - 1);
+    }
+
+    function syncDateFromDay() {
+      if (syncingCalendar) return;
+      syncingCalendar = true;
+      const day = clampDay($("day").value);
+      $("day").value = day;
+      $("date").value = dateFromDay(day);
+      syncingCalendar = false;
+    }
+
+    function syncDayFromDate() {
+      if (syncingCalendar) return;
+      syncingCalendar = true;
+      const day = clampDay($("day").value);
+      state.seasonStartDate = inferSeasonStartDate(day, $("date").value || localDateString());
+      $("day").value = day;
+      $("date").value = dateFromDay(day);
+      syncingCalendar = false;
     }
 
     function padDay(value) {
@@ -1016,22 +1551,36 @@
       const combo = (perfect ? 30 : 0) + (full ? 20 : 0);
       const base = earlyPoints + morningPoints + bodyPoints + skillPoints + bookPoints + dietPoints + trackPoints;
       const total = base + combo;
+      const breakdown = {
+        early: { label: "EARLY｜早起", done: earlyDone, points: earlyPoints },
+        morning: { label: "MORNING｜晨间状态", done: morningDone, points: morningPoints },
+        body: { label: "BODY｜运动", done: bodyDone, points: bodyPoints, detail: `运动 ${exercise} min，步数 ${steps}` },
+        skill: { label: "SKILL｜学习技能", done: skillDone, points: skillPoints, detail: `有效技能时间 ${skillTime} min，AI有效 ${aiEffective} min` },
+        book: { label: "BOOK｜读书", done: bookDone, points: bookPoints, detail: `阅读 ${read} min，成果 +${bookBonus}` },
+        diet: { label: "DIET｜饮食", done: dietDone, points: dietPoints },
+        track: { label: "TRACK｜留下记录", done: trackDone, points: trackPoints }
+      };
 
       return {
         earlyDone, earlyPoints, morningDone, morningPoints, bodyDone, bodyPoints,
         aiEffective, skillDone, skillPoints, bookDone, bookPoints, dietDone,
-        dietPoints, trackDone, trackPoints, lights, perfect, full, combo, base, total
+        dietPoints, trackDone, trackPoints, lights, perfect, full, combo, base, total,
+        breakdown,
+        comboDetail: { perfect, full, points: combo, base }
       };
     }
 
     function render() {
       state.season = $("season").value || "01";
-      state.day = Math.min(50, Math.max(1, Number($("day").value || 1)));
+      state.seasonStartDate = state.seasonStartDate || localDateString();
+      state.day = clampDay($("day").value);
       const calc = calculate();
 
       $("xpTotal").textContent = Math.round(state.xp);
       $("coinTotal").textContent = Math.round(state.coins);
       $("availableCoins").textContent = Math.round(state.coins);
+      $("seasonStartText").textContent = state.seasonStartDate || localDateString();
+      $("syncDayText").textContent = padDay(state.day);
       $("todayTotal").textContent = pointsText(calc.total);
       $("lightsSummary").textContent = `${calc.lights} / 7 lights`;
 
@@ -1059,13 +1608,20 @@
       $("perfectState").textContent = calc.perfect ? "✓" : "○";
       $("fullState").textContent = calc.full ? "✓" : "○";
       $("comboText").textContent = `Combo Bonus：+${calc.combo}`;
+      $("settleBtn").textContent = editingEntryId ? "保存修改" : "结算入账";
+      $("clearBtn").hidden = Boolean(editingEntryId);
+      $("cancelEditBtn").hidden = !editingEntryId;
+      $("editBanner").classList.toggle("active", Boolean(editingEntryId));
+      $("editBanner").textContent = editingEntryId
+        ? `正在编辑 Day ${padDay(state.day)}。保存后会按新旧分数差额修正 XP 和 Coins。`
+        : "";
 
       save();
       renderWishes();
       renderHistory();
     }
 
-    function clearToday() {
+    function clearToday(options = {}) {
       const today = $("date").value;
       ids.forEach((id) => {
         const el = $(id);
@@ -1075,27 +1631,96 @@
         else if (el.type === "time" || el.type === "text") el.value = "";
         else el.value = 0;
       });
-      $("date").value = today;
+      $("date").value = options.preserveDate === false ? localDateString() : today;
+      if (!options.skipRender) render();
+    }
+
+    async function saveEditedEntry(calc) {
+      const index = selectedHistoryIndex();
+      if (index < 0) {
+        alert("找不到正在编辑的记录。");
+        editingEntryId = null;
+        draftBeforeEdit = null;
+        render();
+        return;
+      }
+
+      const original = state.history[index];
+      const updated = buildEntry(calc, {
+        id: original.id || editingEntryId,
+        type: original.type === "missed" ? "settled" : (original.type || "settled")
+      });
+      const delta = updated.total - Number(original.total || 0);
+      const returnSeason = draftBeforeEdit?.season || state.season || "01";
+      const returnDay = draftBeforeEdit?.day || state.day || 1;
+      const returnDate = draftBeforeEdit?.date || localDateString();
+      state.history[index] = updated;
+      state.xp = Math.max(0, Number(state.xp || 0) + delta);
+      state.coins = Math.max(0, Number(state.coins || 0) + delta);
+      selectedHistoryId = historyId(updated, index);
+      editingEntryId = null;
+      draftBeforeEdit = null;
+      clearToday({ preserveDate: false, skipRender: true });
+      $("season").value = returnSeason;
+      $("day").value = returnDay;
+      $("date").value = returnDate;
+      save();
       render();
+      setActiveView("review");
+      await saveCloud();
+    }
+
+    function startEditingSelectedEntry() {
+      const index = selectedHistoryIndex();
+      const entry = state.history[index];
+      if (!entry || !entry.inputs || !entry.breakdown) {
+        alert("旧版记录明细有限，不能回填完整项目编辑。");
+        return;
+      }
+      draftBeforeEdit = captureInputs();
+      editingEntryId = historyId(entry, index);
+      selectedHistoryId = editingEntryId;
+      applyInputs({ ...emptyInputs(entry.day), ...entry.inputs, day: entry.day, season: entry.season || state.season });
+      if (entry.date) $("date").value = entry.date;
+      setActiveView("today");
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function cancelEditing() {
+      if (draftBeforeEdit) applyInputs(draftBeforeEdit);
+      editingEntryId = null;
+      draftBeforeEdit = null;
+      render();
+    }
+
+    async function resetSeasonStartToday() {
+      state.seasonStartDate = localDateString();
+      $("date").value = dateFromDay($("day").value);
+      save();
+      render();
+      if (syncId) await saveCloud();
     }
 
     async function settle() {
       const calc = calculate();
+      if (editingEntryId) {
+        await saveEditedEntry(calc);
+        return;
+      }
       if (calc.total <= 0 && !confirm("今日获得为 0，仍然要记录吗？")) return;
+      const entry = buildEntry(calc);
+      const missed = missingEntriesBefore(state.day);
 
       state.xp += calc.total;
       state.coins += calc.total;
-      state.history.unshift({
-        date: $("date").value || localDateString(),
-        day: state.day,
-        total: calc.total,
-        lights: calc.lights,
-        note: $("dailyNote").value.trim()
-      });
-      state.history = state.history.slice(0, 20);
+      state.history = [entry, ...missed.reverse(), ...state.history];
+      selectedHistoryId = entry.id;
+      state.history = state.history.slice(0, 50);
       if (state.day < 50) {
         state.day += 1;
         $("day").value = state.day;
+        $("date").value = dateFromDay(state.day);
       }
       clearToday();
       save();
@@ -1114,7 +1739,9 @@
       state.coins = Math.max(0, state.coins - last.total);
       state.day = last.day;
       $("day").value = state.day;
+      $("date").value = dateFromDay(state.day);
       state.history.shift();
+      selectedHistoryId = state.history[0] ? historyId(state.history[0], 0) : null;
       save();
       render();
       await saveCloud();
@@ -1124,7 +1751,7 @@
       const name = $("wishName").value.trim();
       const price = Math.max(1, Number($("wishPrice").value || 0));
       if (!name || !price) return;
-      state.wishes.unshift({ id: crypto.randomUUID(), name, price });
+      state.wishes.unshift({ id: newId(), name, price });
       $("wishName").value = "";
       $("wishPrice").value = "";
       save();
@@ -1162,22 +1789,192 @@
       });
     }
 
+    function historyId(entry, index) {
+      return entry.id || `legacy-${entry.date || "no-date"}-${entry.day || index}-${index}`;
+    }
+
+    function orderedHistory() {
+      return Array.isArray(state.history) ? [...state.history].reverse() : [];
+    }
+
+    function renderTrend() {
+      const chart = $("trendChart");
+      const latest = $("trendLatest");
+      const entries = orderedHistory().filter((entry) => Number.isFinite(Number(entry.total)));
+      if (!entries.length) {
+        latest.textContent = "--";
+        chart.className = "trend-empty";
+        chart.innerHTML = "还没有趋势数据";
+        return;
+      }
+
+      const width = 320;
+      const height = 150;
+      const pad = 24;
+      const totals = entries.map((entry) => Math.max(0, Number(entry.total || 0)));
+      const max = Math.max(10, ...totals);
+      const min = Math.min(0, ...totals);
+      const range = Math.max(1, max - min);
+      const points = totals.map((total, index) => {
+        const x = entries.length === 1
+          ? width / 2
+          : pad + (index / (entries.length - 1)) * (width - pad * 2);
+        const y = height - pad - ((total - min) / range) * (height - pad * 2);
+        return { x, y, total, entry: entries[index] };
+      });
+      const pointString = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+      const circles = points.map((point) => `
+        <circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4.2" fill="#278455">
+          <title>Day ${padDay(point.entry.day)} · +${Math.round(point.total)}</title>
+        </circle>
+      `).join("");
+      const first = entries[0];
+      const last = entries[entries.length - 1];
+
+      latest.textContent = `最近 +${Math.round(totals[totals.length - 1])}`;
+      chart.className = "";
+      chart.innerHTML = `
+        <svg class="trend-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="每日总分趋势">
+          <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="#d7ded8" stroke-width="1" />
+          <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" stroke="#d7ded8" stroke-width="1" />
+          <text x="${pad}" y="16" fill="#66736c" font-size="10">+${Math.round(max)}</text>
+          <text x="${pad}" y="${height - 6}" fill="#66736c" font-size="10">0</text>
+          ${points.length > 1 ? `<polyline points="${pointString}" fill="none" stroke="#278455" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />` : ""}
+          ${circles}
+          <text x="${pad}" y="${height - 8}" fill="#66736c" font-size="10">D${padDay(first.day)}</text>
+          <text x="${width - pad}" y="${height - 8}" text-anchor="end" fill="#66736c" font-size="10">D${padDay(last.day)}</text>
+        </svg>
+      `;
+    }
+
+    function formatInputValue(id, value) {
+      if (typeof value === "boolean") return value ? "是" : "否";
+      if (optionLabels[id]) return optionLabels[id][String(value)] || String(value || "无");
+      if (value === "" || value === null || value === undefined) return "未填写";
+      return String(value);
+    }
+
+    function hasUsefulInput(id, value, inputs) {
+      if (typeof value === "boolean") return value === true;
+      if (value === "" || value === null || value === undefined) return false;
+      if (id === "aiFactor") return Number(inputs.aiRaw || 0) > 0;
+      if (optionLabels[id]) return String(value) !== "0";
+      if (["exerciseMin", "steps", "aiRaw", "cookingMin", "otherSkillMin", "readMin"].includes(id)) {
+        return Number(value || 0) > 0;
+      }
+      return String(value).trim() !== "";
+    }
+
+    function renderHistoryDetail(entry) {
+      const detail = $("historyDetail");
+      if (!entry) {
+        detail.innerHTML = `<div class="note">选择某一天查看完整回顾。</div>`;
+        return;
+      }
+
+      const note = entry.note ? escapeHtml(entry.note) : "无备注";
+      if (!entry.inputs || !entry.breakdown) {
+        detail.innerHTML = `
+          <div class="detail-top">
+            <div>
+              <span class="label">Day ${padDay(entry.day)}</span>
+              <div class="note">${escapeHtml(entry.date || "")}</div>
+            </div>
+            <strong>+${Math.round(entry.total || 0)}</strong>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-row"><span>点亮</span><strong>${Math.round(entry.lights || 0)} / 7</strong></div>
+            <div class="detail-row"><span>备注</span><strong>${note}</strong></div>
+          </div>
+          <div class="note">旧版记录，仅保存总分、灯数和备注。</div>
+        `;
+        return;
+      }
+
+      const completedItems = Object.entries(entry.breakdown).filter(([, item]) => item.done);
+      const breakdown = completedItems.map(([, item]) => `
+        <div class="detail-row ${item.done ? "done" : ""}">
+          <span>${escapeHtml(item.label)}${item.detail ? `<br><small>${escapeHtml(item.detail)}</small>` : ""}</span>
+          <strong>完成 · +${Math.round(item.points || 0)}</strong>
+        </div>
+      `).join("");
+      const combo = entry.combo || {};
+      const visibleInputIds = [...new Set(completedItems.flatMap(([key]) => reviewInputIdsByGoal[key] || []))]
+        .filter((id) => hasUsefulInput(id, entry.inputs[id], entry.inputs));
+      const inputChips = visibleInputIds.map((id) => `
+        <div class="input-chip">
+          <span>${escapeHtml(inputLabels[id] || id)}</span>
+          <strong>${escapeHtml(formatInputValue(id, entry.inputs[id]))}</strong>
+        </div>
+      `).join("");
+      const comboRows = Number(combo.points || 0) > 0 ? `
+        <div class="detail-row done">
+          <span>Combo Bonus</span>
+          <strong>+${Math.round(combo.points || 0)}</strong>
+        </div>
+        <div class="detail-row done">
+          <span>Perfect Day / Full Clear</span>
+          <strong>${combo.perfect ? "✓" : "○"} / ${combo.full ? "✓" : "○"}</strong>
+        </div>
+      ` : "";
+      const emptyDone = completedItems.length
+        ? ""
+        : `<div class="note">${entry.type === "missed" ? "这天没有记录，积分为 0。" : "这天没有点亮项目，但仍保留了入账记录。"}</div>`;
+      const inputBlock = inputChips ? `
+        <div class="label">完成内容</div>
+        <div class="input-snapshot">${inputChips}</div>
+      ` : "";
+      const editAction = `
+        <div class="actions">
+          <button class="btn primary" type="button" data-edit-history="true">编辑这天</button>
+        </div>
+      `;
+
+      detail.innerHTML = `
+        <div class="detail-top">
+          <div>
+            <span class="label">Day ${padDay(entry.day)} · ${Math.round(entry.lights || 0)} / 7 lights</span>
+            <div class="note">${escapeHtml(entry.date || "")} · ${note}</div>
+          </div>
+          <strong>+${Math.round(entry.total || 0)}</strong>
+        </div>
+        <div class="detail-grid">
+          ${breakdown}
+          ${comboRows}
+          ${emptyDone}
+        </div>
+        ${inputBlock}
+        ${editAction}
+      `;
+    }
+
     function renderHistory() {
+      renderTrend();
       const list = $("historyList");
       if (!state.history.length) {
         list.innerHTML = `<div class="note">还没有结算记录。</div>`;
+        renderHistoryDetail(null);
         return;
       }
+      const activeIds = state.history.map(historyId);
+      if (!selectedHistoryId || !activeIds.includes(selectedHistoryId)) {
+        selectedHistoryId = activeIds[0];
+      }
       list.innerHTML = "";
-      state.history.forEach((entry) => {
-        const item = document.createElement("div");
-        item.className = "history-item";
+      state.history.forEach((entry, index) => {
+        const id = historyId(entry, index);
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = `history-item${id === selectedHistoryId ? " selected" : ""}`;
+        item.dataset.historyId = id;
         item.innerHTML = `
-          <span><strong>Day ${padDay(entry.day)}</strong> · ${entry.lights}/7 · ${escapeHtml(entry.note || entry.date)}</span>
-          <strong>+${Math.round(entry.total)}</strong>
+          <span><strong>Day ${padDay(entry.day)}</strong> · ${Math.round(entry.lights || 0)}/7 · ${escapeHtml(entry.note || entry.date || "无备注")}</span>
+          <strong>+${Math.round(entry.total || 0)}</strong>
         `;
         list.appendChild(item);
       });
+      const selectedIndex = activeIds.indexOf(selectedHistoryId);
+      renderHistoryDetail(state.history[selectedIndex]);
     }
 
     function escapeHtml(value) {
@@ -1191,14 +1988,33 @@
     }
 
     document.addEventListener("input", (event) => {
+      if (event.target.id === "day") syncDateFromDay();
+      if (event.target.id === "date") syncDayFromDate();
       if (ids.includes(event.target.id)) render();
     });
     document.addEventListener("change", (event) => {
+      if (event.target.id === "day") syncDateFromDay();
+      if (event.target.id === "date") syncDayFromDate();
       if (ids.includes(event.target.id)) render();
     });
     document.addEventListener("click", (event) => {
+      const navView = event.target.closest("[data-nav]")?.dataset.nav;
+      if (navView) {
+        setActiveView(navView);
+        return;
+      }
+      if (event.target.closest("[data-edit-history]")) {
+        startEditingSelectedEntry();
+        return;
+      }
       const buyId = event.target.dataset.buy;
       const removeId = event.target.dataset.remove;
+      const pickedHistoryId = event.target.closest("[data-history-id]")?.dataset.historyId;
+      if (pickedHistoryId) {
+        selectedHistoryId = pickedHistoryId;
+        renderHistory();
+        return;
+      }
       if (buyId) {
         const wish = state.wishes.find((item) => item.id === buyId);
         if (wish && state.coins >= wish.price && confirm(`兑换 ${wish.name}，扣除 ${wish.price} Coins？`)) {
@@ -1219,24 +2035,29 @@
 
     $("settleBtn").addEventListener("click", settle);
     $("clearBtn").addEventListener("click", clearToday);
+    $("cancelEditBtn").addEventListener("click", cancelEditing);
     $("addWishBtn").addEventListener("click", addWish);
     $("undoBtn").addEventListener("click", undoLastSettle);
     $("connectSyncBtn").addEventListener("click", connectSync);
     $("loadCloudBtn").addEventListener("click", loadCloud);
     $("saveCloudBtn").addEventListener("click", saveCloud);
+    $("resetSeasonStartBtn").addEventListener("click", resetSeasonStartToday);
     $("resetAllBtn").addEventListener("click", () => {
       if (!confirm("确认重置全部 XP、Coins、Wishlist 和记录？")) return;
       state = { ...defaultState, history: [], wishes: [] };
+      selectedHistoryId = null;
       localStorage.removeItem(storageKey);
       init();
       saveCloud();
     });
 
     function init() {
+      state.seasonStartDate = state.seasonStartDate || localDateString();
       $("season").value = state.season || "01";
       $("day").value = state.day || 1;
-      $("date").value = localDateString();
+      $("date").value = dateFromDay(state.day || 1);
       setSyncStatus(syncId ? "已连接同步码" : "本机模式");
+      setActiveView(activeView);
       render();
     }
 
